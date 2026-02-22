@@ -301,7 +301,7 @@ def user_control():
         # brain.screen.clear_screen()
         # brain.screen.set_cursor(1, 1)
         # brain.screen.set_pen_width(2)
-        # brain.screen.print("Drive: " + str(drive))
+        # brain.screen.print("Drive: " + str(drive))s
         left_speed = controller.axis3.position()#drive + turn
         right_speed = controller.axis2.position() #drive - turn
         # Clamp to valid motor range
