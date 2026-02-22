@@ -24,7 +24,8 @@ outtakeRearMotor = Motor(Ports.PORT15, False)
 intakeMotor = Motor(Ports.PORT17, False)
 intakeMotors = MotorGroup(outtakeRearMotor, intakeMotor)
 gps = Gps(Ports.PORT20)
-drivetrain = SmartDrive(leftMotorGroup, rightMotorGroup, gps, 9.709, 8, 11.1, DistanceUnits.IN, 37/63)
+inertial = Inertial(Ports.PORT11)
+drivetrain = SmartDrive(leftMotorGroup, rightMotorGroup, inertial, 9.709, 8, 11.1, DistanceUnits.IN, 37/63)
 heightMech = Pneumatics(brain.three_wire_port.a)
 # flap = Pneumatics(brain.three_wire_port.b)
 
@@ -243,20 +244,18 @@ def user_control():
         brain.screen.set_cursor(1, 1)
         brain.screen.set_pen_width(2)
         brain.screen.print("Drive: " + str(drive))
-        if(drive > 0):
-            drivetrain.drive(FORWARD)
-        else: 
-            if(drive < 0):
-                drivetrain.drive(REVERSE)
-            else:   
-                drivetrain.stop()
-        if(turn >= 3):
-            drivetrain.turn(RIGHT)
+        left_speed = drive + turn
+        right_speed = drive - turn
+        # Clamp to valid motor range
+        left_speed = max(-100, min(100, left_speed))
+        right_speed = max(-100, min(100, right_speed))
+        if abs(left_speed) < 3 and abs(right_speed) < 3:
+            drivetrain.stop()
         else:
-            if(turn <= -3):
-                drivetrain.turn(LEFT)
-            else:
-                drivetrain.stop()
+            leftMotorGroup.set_velocity(left_speed, PERCENT)
+            rightMotorGroup.set_velocity(right_speed, PERCENT)
+            leftMotorGroup.spin(FORWARD)
+            rightMotorGroup.spin(FORWARD)
 
         wait(20, MSEC)
 
