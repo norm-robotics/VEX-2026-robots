@@ -31,6 +31,7 @@ drivetrain = SmartDrive(leftMotorGroup, rightMotorGroup, inertial, 9.709, 8, 11.
 drivetrain2 = DriveTrain(leftMotorGroup, rightMotorGroup)
 heightMech = Pneumatics(brain.three_wire_port.a)
 # flap = Pneumatics(brain.three_wire_port.b)
+controller = Controller()
 
 # def autonomous():
 #     brain.screen.clear_screen()
@@ -270,7 +271,6 @@ def autonomous():
 def user_control():
     brain.screen.clear_screen()
     brain.screen.print("driver control")
-    controller = Controller()
     # place driver control in this while loop
     while True:
         turn = 0.85*controller.axis1.position() #0.85 is the for trim value from original code
@@ -293,12 +293,7 @@ def user_control():
             heightMech.open()
         if (controller.buttonDown.pressing()):
             heightMech.close()
-        # controller.buttonLeft.pressed(flap.open)
-        # controller.buttonRight.pressed(flap.close)
-        brain.screen.clear_screen()
-        brain.screen.set_cursor(1, 1)
-        brain.screen.set_pen_width(2)
-        brain.screen.print("Drive: " + str(drive))
+
         left_speed = controller.axis3.position()#drive + turn
         right_speed = controller.axis2.position() #drive - turn
         # Clamp to valid motor range
