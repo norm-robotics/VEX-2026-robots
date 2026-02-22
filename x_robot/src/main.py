@@ -14,6 +14,10 @@ import math
 # Defines
 brain = Brain()
 gps = Gps(Ports.PORT12)
+gps.calibrate()
+gps.set_origin(5,6,INCHES)
+optical = Optical(Ports.PORT11)
+
 frontRightUpperMotor = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 frontRightLowerMotor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)
 frontRightMotors = MotorGroup(frontRightUpperMotor,frontRightLowerMotor)
@@ -101,12 +105,31 @@ rear_left_pid = PIDController(kp=0.5, ki=0.1, kd=0.1, max_output=100)
 
 
 def autonomous():
+    gps.calibrate()
     brain.screen.clear_screen()
+    color = optical.rgb(False)
+    invert = -1
+    if color == (255, 0, 0):
+        invert = 1
+    elif color == (0, 0, 255):
+        invert = -1
+    
+    currentX = gps.x_position()
+    currentY = gps.y_position()
+    currentYaw = gps.heading()
+
+    driveToPoint(currentX, currentY+invert*10, currentYaw)
+    
+    
     brain.screen.print("autonomous code")
+    driveToPoint(5, 6, 0)
+    
     # place automonous code here
 
 def user_control():
+    gps.calibrate()
     brain.screen.clear_screen()
+    color = optical.color()
     brain.screen.print("driver control")
     controller = Controller()
 
@@ -144,17 +167,14 @@ def user_control():
         XDriveJoystick(Ypos, Xpos, rotation)
         wait(20, MSEC)
 
-# create competition instance
-comp = Competition(user_control, autonomous)
-
-# actions to do when the program starts
-brain.screen.clear_screen()
 
 def XDriveJoystick(Xpos, Ypos, turn):
-    frontRightMotorMove = Ypos - Xpos - turn
-    frontLeftMotorMove = -Ypos - Xpos - turn
-    rearRightMotorMove = Ypos + Xpos - turn
-    rearLeftMotorMove = -Ypos + Xpos - turn
+    rotatedX, rotatedY, turn = fieldOrientedControl(Xpos, Ypos, turn)
+    frontRightMotorMove = rotatedY - rotatedX - turn
+    frontLeftMotorMove = -rotatedY - rotatedX - turn
+    rearRightMotorMove = rotatedY + rotatedX - turn
+    rearLeftMotorMove = -rotatedY + rotatedX - turn
+    pidControl(frontRightMotorMove, frontLeftMotorMove, rearRightMotorMove, rearLeftMotorMove)
     
 
 
@@ -164,7 +184,7 @@ def fieldOrientedControl(Xpos, Ypos, turn):
     headingRad = heading * (3.14159 / 180)
     rotatedX = Xpos * math.cos(headingRad) - Ypos * math.sin(headingRad)
     rotatedY = Xpos * math.sin(headingRad) + Ypos * math.cos(headingRad)
-    XDriveJoystick(rotatedX, rotatedY, turn)
+    return rotatedX, rotatedY, turn
 
 
 
@@ -190,3 +210,43 @@ def pidControl(front_right_target, front_left_target, rear_right_target, rear_le
     frontLeftMotors.spin(FORWARD, fl_output, VelocityUnits.PERCENT)
     rearRightMotors.spin(FORWARD, rr_output, VelocityUnits.PERCENT)
     rearLeftMotors.spin(FORWARD, rl_output, VelocityUnits.PERCENT)
+
+def driveToPoint(targetX, targetY, targetHeading):
+    """Drive to a specific point with field-oriented control and PID"""
+    while True:
+        # Get current position and heading
+        currentX = gps.x_position()
+        currentY = gps.y_position()
+        currentHeading = gps.heading()
+        
+        # Calculate errors
+        errorX = targetX - currentX
+        errorY = targetY - currentY
+        errorHeading = targetHeading - currentHeading
+        
+        # Convert errors to motor targets (this is a simple proportional control for demonstration)
+        front_right_target = errorY - errorX - errorHeading
+        front_left_target = -errorY - errorX - errorHeading
+        rear_right_target = errorY + errorX - errorHeading
+        rear_left_target = -errorY + errorX - errorHeading
+        
+        # Apply PID control to reach the target
+        pidControl(front_right_target, front_left_target, rear_right_target, rear_left_target)
+        
+        # Check if we are close enough to the target (you can adjust the threshold)
+        if math.sqrt(errorX**2 + errorY**2) < 5 and abs(errorHeading) < 5:
+            break
+        
+        wait(20, MSEC)
+
+
+def main():
+    # create competition instance
+    comp = Competition(user_control, autonomous)
+
+    # actions to do when the program starts
+    brain.screen.clear_screen()
+
+
+if __name__ == "__main__":
+    main()
