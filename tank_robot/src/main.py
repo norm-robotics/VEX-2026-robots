@@ -28,9 +28,10 @@ intakeMotors = MotorGroup(outtakeRearMotor, intakeMotor)
 gps = Gps(Ports.PORT20)
 inertial = Inertial(Ports.PORT11)
 drivetrain = SmartDrive(leftMotorGroup, rightMotorGroup, inertial, 9.709, 8, 11.1, DistanceUnits.IN, 37/63)
-drivetrain2 = MotorGroup(leftMotorGroup, rightMotorGroup)   
+drivetrain2 = DriveTrain(leftMotorGroup, rightMotorGroup)
 heightMech = Pneumatics(brain.three_wire_port.a)
 # flap = Pneumatics(brain.three_wire_port.b)
+controller = Controller()
 
 # def autonomous():
 #     brain.screen.clear_screen()
@@ -200,9 +201,9 @@ heightMech = Pneumatics(brain.three_wire_port.a)
 def autonomous():
     brain.screen.clear_screen()
     brain.screen.print("autonomous code")
-    drivetrain2.spin(FORWARD, 50, PERCENT)
+    drivetrain.drive(FORWARD, 50, PERCENT)
     wait(2, SECONDS)
-    drivetrain2.stop()
+    drivetrain.stop()
     
 
 # def autonomous_match():
@@ -270,10 +271,9 @@ def autonomous():
 def user_control():
     brain.screen.clear_screen()
     brain.screen.print("driver control")
-    controller = Controller()
     # place driver control in this while loop
     while True:
-        turn = 0.85*controller.axis4.position() #0.85 is the for trim value from original code
+        turn = 0.85*controller.axis1.position() #0.85 is the for trim value from original code
         drive = 0.85*controller.axis3.position() #0.6 is the lat trim value from original code
         if controller.buttonR1.pressing():
             intakeMotors.spin(FORWARD,100, PERCENT)
@@ -289,26 +289,24 @@ def user_control():
                 outtakeFrontMotor.spin(REVERSE,100, PERCENT)
             else:
                 outtakeFrontMotor.stop()
-        # controller.buttonUp.pressed(heightMech.open)
-        # controller.buttonDown.pressed(heightMech.close)
-        # controller.buttonLeft.pressed(flap.open)
-        # controller.buttonRight.pressed(flap.close)
-        brain.screen.clear_screen()
-        brain.screen.set_cursor(1, 1)
-        brain.screen.set_pen_width(2)
-        brain.screen.print("Drive: " + str(drive))
-        left_speed = drive + turn
-        right_speed = drive - turn
+        if (controller.buttonUp.pressing()):
+            heightMech.open()
+        if (controller.buttonDown.pressing()):
+            heightMech.close()
+
+        left_speed = controller.axis3.position()#drive + turn
+        right_speed = controller.axis2.position() #drive - turn
         # Clamp to valid motor range
         left_speed = max(-100, min(100, left_speed))
         right_speed = max(-100, min(100, right_speed))
         if abs(left_speed) < 3 and abs(right_speed) < 3:
             drivetrain.stop()
         else:
-            leftMotorGroup.set_velocity(left_speed, PERCENT)
-            rightMotorGroup.set_velocity(right_speed, PERCENT)
-            leftMotorGroup.spin(FORWARD)
-            rightMotorGroup.spin(FORWARD)
+            #leftMotorGroup.set_velocity(left_speed, PERCENT)
+            #rightMotorGroup.set_velocity(right_speed, PERCENT)
+            #leftMotorGroup.spin(FORWARD)
+            #rightMotorGroup.spin(FORWARD)
+            drivetrain.drive(FORWARD)
 
         wait(20, MSEC)
 
