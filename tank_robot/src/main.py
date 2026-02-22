@@ -273,7 +273,7 @@ def user_control():
     controller = Controller()
     # place driver control in this while loop
     while True:
-        turn = 0.85*controller.axis4.position() #0.85 is the for trim value from original code
+        turn = 0.85*controller.axis1.position() #0.85 is the for trim value from original code
         drive = 0.85*controller.axis3.position() #0.6 is the lat trim value from original code
         if controller.buttonR1.pressing():
             intakeMotors.spin(FORWARD,100, PERCENT)
