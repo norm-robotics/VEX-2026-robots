@@ -133,9 +133,9 @@ class PIDController:
 
 
 # PID controllers for chassis axes (lin x, lin y, ang z)
-chassis_x_pid = PIDController(kp=0.5, ki=0.0, kd=0.00, max_output=100)
-chassis_y_pid = PIDController(kp=0.5, ki=0.0, kd=0.00, max_output=100)
-chassis_heading_pid = PIDController(kp=0.05, ki=0.0, kd=0.0, max_output=100)
+chassis_x_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
+chassis_y_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
+chassis_heading_pid = PIDController(kp=0.2, ki=0.0, kd=0.2, max_output=100)
 
 
 
@@ -219,14 +219,14 @@ def autonomous():
 
         # ---- step 0: drive forward 36 in ----
         if step == 0:
-            if driveToPoint(snapX, snapY - 14, snapYaw):
+            if driveToPoint(snapX, snapY - 7, snapYaw):
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
                 step = 1
 
         if step == 1:
-            if driveToPoint(snapX, snapY, snapYaw+180):
+            if driveToPoint(snapX, snapY, snapYaw+90):
                 intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
                 matchLoadMech.open()
                 wait_start = brain.timer.time()
@@ -234,14 +234,22 @@ def autonomous():
 
         # ---- step 1: drive left 12 in ----
         elif step == 2:
-            if driveToPoint(snapX - 6, snapY, snapYaw):
-                wait_start = brain.timer.time()
-                step = 3
+            frontLeftLowerMotor.spin(FORWARD, 100, VelocityUnits.PERCENT)
+            rearLeftLowerMotor.spin(FORWARD, 100, VelocityUnits.PERCENT)
+            frontRightLowerMotor.spin(FORWARD, 100, VelocityUnits.PERCENT)
+            rearRightLowerMotor.spin(FORWARD, 100, VelocityUnits.PERCENT)
+            wait_start = brain.timer.time()
+            step = 3
+
 
         # ---- step 2: wait 1 s for intake ----
         elif step == 3:
-            if brain.timer.time() - wait_start >= 1000:
+            if brain.timer.time() - wait_start >= 500:
                 intakeMotors.stop()
+                frontLeftLowerMotor.stop()
+                rearLeftLowerMotor.stop()
+                frontRightLowerMotor.stop()
+                rearRightLowerMotor.stop()
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
@@ -249,47 +257,44 @@ def autonomous():
 
         # ---- step 3: drive right 6 in ----
         elif step == 4:
-            if driveToPoint(snapX + 6, snapY, snapYaw):
+            if driveToPoint(snapX, snapY, snapYaw + 200):
                 matchLoadMech.close()
-                heightMech.open()
-                snapX = gps.x_position()
-                snapY = gps.y_position()
-                snapYaw = gps.heading()
+                # intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
+                # outtakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
+                wait_start = brain.timer.time()
                 step = 5
+
+            
 
         # ---- step 4: drive right 24 in, spin 180° ----
         elif step == 5:
-            if driveToPoint(snapX + 24, snapY, snapYaw):
+            if driveToPoint(snapX+6 , snapY, snapYaw):
                 intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
                 outtakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
-                step = 6
-
-        elif step == 6:
-            if driveToPoint(snapX + 24, snapY, snapYaw + 180):
-                intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
-                outtakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
-                wait_start = brain.timer.time()
+                wait_start = brain.timer.time()   # start the outtake timer NOW
                 step = 7
+
+            
 
         # ---- step 5: wait 1 s for outtake ----
         elif step == 7:
-            if brain.timer.time() - wait_start >= 1000:
+            if brain.timer.time() - wait_start >= 500:
                 outtakeMotors.stop()
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
                 step = 8
 
-        # ---- step 6: drive forward 12 in, turn -90° ----
-        elif step == 8:
-            if driveToPoint(snapX + 12, snapY, snapYaw - 90):
-                heightMech.close()
-                wait_start = brain.timer.time()
-                step = 9
+        # # ---- step 6: drive forward 12 in, turn -90° ----
+        # elif step == 8:
+        #     if driveToPoint(snapX + 12, snapY, snapYaw - 90):
+        #         heightMech.close()
+        #         wait_start = brain.timer.time()
+        #         step = 9
 
         # ---- step 7: wait 500 ms ----
         elif step == 9:
-            if brain.timer.time() - wait_start >= 500:
+            if brain.timer.time() - wait_start >= 250:
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
@@ -437,10 +442,10 @@ def XDriveJoystick(Xpos, Ypos, turn):
         rotatedX = Xpos
         rotatedY = Ypos
 
-    frontRightMotorMove = rotatedY - rotatedX - turn
-    frontLeftMotorMove = -rotatedY - rotatedX + turn
-    rearRightMotorMove = rotatedY + rotatedX + turn
-    rearLeftMotorMove = -rotatedY + rotatedX - turn
+    frontRightMotorMove = rotatedY - rotatedX - turn   # Fwd - Stf - Turn
+    frontLeftMotorMove  = -rotatedY - rotatedX + turn   # Fwd + Stf + Turn
+    rearRightMotorMove  = -rotatedY - rotatedX - turn   # Fwd + Stf - Turn
+    rearLeftMotorMove   = rotatedY - rotatedX + turn    # Fwd - Stf + Turn
 
     frontRightMotors.spin(FORWARD, frontRightMotorMove, VelocityUnits.PERCENT)
     frontLeftMotors.spin(FORWARD, frontLeftMotorMove, VelocityUnits.PERCENT)
@@ -592,10 +597,10 @@ def normalize_angle_deg(angle):
     return angle
 
 
-POSITION_TOLERANCE = 1.5   # inches – how close is "arrived"
-HEADING_TOLERANCE  = 3.0   # degrees
-SETTLE_CYCLES      = 5     # must stay within tolerance this many loops (~100 ms)
-TIMEOUT_MS         = 5000  # give up after this long
+POSITION_TOLERANCE = 2.0   # inches – how close is "arrived"
+HEADING_TOLERANCE  = 5.0   # degrees
+SETTLE_CYCLES      = 3     # must stay within tolerance this many loops (~60 ms)
+TIMEOUT_MS         = 8000  # give up after this long
 
 
 class DriveState:
@@ -641,11 +646,11 @@ def driveToPoint(targetX, targetY, targetHeading):
     # Field → robot frame
     robot_x, robot_y = fieldToRobot(lin_x, lin_y, currentHeading)
 
-    # X-drive mixing
-    front_right = robot_y - robot_x - ang_z
-    front_left  = -robot_y - robot_x + ang_z
-    rear_right  = robot_y + robot_x + ang_z
-    rear_left   = -robot_y + robot_x - ang_z
+    # X-drive mixing: Fwd = robot_y, Stf = robot_x, Turn = ang_z (CW positive)
+    front_right =  robot_y - robot_x - ang_z   # Fwd - Stf - Turn
+    front_left  =  robot_y + robot_x + ang_z   # Fwd + Stf + Turn
+    rear_right  =  robot_y + robot_x - ang_z   # Fwd + Stf - Turn
+    rear_left   =  robot_y - robot_x + ang_z   # Fwd - Stf + Turn
 
     frontRightMotors.spin(FORWARD, clamp(front_right, -100, 100), VelocityUnits.PERCENT)
     frontLeftMotors.spin(FORWARD, clamp(front_left, -100, 100), VelocityUnits.PERCENT)
