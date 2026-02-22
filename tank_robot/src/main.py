@@ -33,7 +33,7 @@ def autonomous():
     brain.screen.clear_screen()
     brain.screen.print("autonomous code")
     # place automonous code here, to pick up the balls on the floor
-
+    gps.calibrate()
     # Front starts at 15 inches from wall, drive another 12 inches
     drivetrain.drive_for(FORWARD, 12, INCHES, wait=True)
     # Turn 90 degrees to the right
