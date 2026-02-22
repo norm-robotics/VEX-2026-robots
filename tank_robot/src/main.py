@@ -289,8 +289,8 @@ def user_control():
                 outtakeFrontMotor.spin(REVERSE,100, PERCENT)
             else:
                 outtakeFrontMotor.stop()
-        # controller.buttonUp.pressed(heightMech.open)
-        # controller.buttonDown.pressed(heightMech.close)
+        #controller.buttonUp.pressed(heightMech.open)
+        #controller.buttonDown.pressed(heightMech.close)
         # controller.buttonLeft.pressed(flap.open)
         # controller.buttonRight.pressed(flap.close)
         brain.screen.clear_screen()
