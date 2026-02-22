@@ -197,72 +197,75 @@ heightMech = Pneumatics(brain.three_wire_port.a)
     # intakeMotors.stop()
     # drivetrain.stop()
 
-def autonomous():
-    brain.screen.clear_screen()
-    brain.screen.print("autonomous code")
-    drivetrain.drive(FORWARD, 50, PERCENT)
-    wait(2, SECONDS)
-    drivetrain.stop()
+
+# def autonomous():
+#     brain.screen.clear_screen()  
+#     brain.screen.print("autonomous Code")
+#     outtakeFrontMotor.spin(FORWARD, 100, RPM)
+#     wait(10, SECONDS)
+#     outtakeFrontMotor.stop()
+#     # heightMech.open()
+#     # heightMech.close()
     
 
-# def autonomous_match():
-#     brain.screen.clear_screen()
-#     brain.screen.print("Autonomous match")
+def autonomous():
+    brain.screen.clear_screen()
+    brain.screen.print("Autonomous match")
 
 
-#     #Gunning for the FFA
-#     drivetrain.turn_for(LEFT, 45, DEGREES)
-#     drivetrain.drive_for(FORWARD, 53.62, INCHES)
-#     intakeMotors.spin(FORWARD)
-#     drivetrain.turn_for(LEFT, 45, DEGREES)
-#     drivetrain.drive_for(FORWARD, 36, INCHES)
-#     drivetrain.turn_for(LEFT, 90, DEGREES)
-#     wait(5, SECONDS)
-#     intakeMotors.stop()
-#     drivetrain.drive_for(FORWARD, 24, INCHES)
-#     intakeMotors.spin(REVERSE)
-#     wait(3, SECONDS)
-#     intakeMotors.stop()
+    #Gunning for the FFA
+    drivetrain2.turn_for(LEFT, 21, DEGREES, 50, RPM)
+    drivetrain2.drive_for(FORWARD, 6, INCHES, 50, RPM)
+    intakeMotors.spin(FORWARD)
+    drivetrain2.turn_for(LEFT, 69, DEGREES, 50, RPM)
+    drivetrain2.drive_for(FORWARD, 6, INCHES, 50, RPM)
+    drivetrain2.turn_for(RIGHT, 21, DEGREES, 50, RPM)
+    wait(5, SECONDS)
+    intakeMotors.stop()
+    drivetrain2.drive_for(FORWARD, 24, INCHES, 50, RPM)
+    intakeMotors.spin(REVERSE)
+    wait(3, SECONDS)
+    intakeMotors.stop()
 
 
-#     #Moving to the nearest match loader
-#     drivetrain.turn_for(RIGHT, 45, DEGREES)
-#     drivetrain.drive_for(FORWARD, 31.69, INCHES)
-#     drivetrain.turn_for(RIGHT, 45, DEGREES)
-#     intakeMotors.spin(FORWARD)
-#     drivetrain.drive_for(FORWARD, 11, INCHES)
-#     wait(5, SECONDS)
-#     intakeMotors.stop()
+    #Moving to the nearest match loader
+    drivetrain2.turn_for(RIGHT, 45, DEGREES, 50, RPM)
+    drivetrain2.drive_for(FORWARD, 31.69, INCHES, 50, RPM)
+    drivetrain2.turn_for(RIGHT, 45, DEGREES, 50, RPM)
+    intakeMotors.spin(FORWARD)
+    drivetrain2.drive_for(FORWARD, 11, INCHES, 50, RPM)
+    wait(5, SECONDS)
+    intakeMotors.stop()
 
-#     #Moving to the left long goal
-#     drivetrain.drive_for(REVERSE, 3, INCHES)
-#     drivetrain.turn_for(RIGHT, 180, DEGREES)
-#     drivetrain.drive_for(FORWARD, 43.55, INCHES)
-#     heightMech.open()
-#     wait(1, SECONDS)
-#     outtakeFrontMotor.spin(FORWARD)
-#     intakeMotors.spin(FORWARD)
-#     wait(2, SECONDS)
-#     intakeMotors.stop()
-#     heightMech.close()
+    #Moving to the left long goal
+    drivetrain2.drive_for(REVERSE, 3, INCHES, 50, RPM)
+    drivetrain2.turn_for(RIGHT, 180, DEGREES, 50, RPM)
+    drivetrain2.drive_for(FORWARD, 43.55, INCHES, 50, RPM)
+    heightMech.open()
+    wait(1, SECONDS)
+    outtakeFrontMotor.spin(FORWARD)
+    intakeMotors.spin(FORWARD)
+    wait(2, SECONDS)
+    intakeMotors.stop()
+    heightMech.close()
 
-#     #Moving back to the loader
-#     drivetrain.drive_for(REVERSE, 12, INCHES)
-#     drivetrain.turn_for(RIGHT, 180, DEGREES)
-#     intakeMotors.spin(FORWARD)
-#     drivetrain.drive_for(FORWARD, 11, INCHES)
-#     wait(5, SECONDS)
-#     intakeMotors.stop()
+    #Moving back to the loader
+    drivetrain2.drive_for(REVERSE, 12, INCHES, 50, RPM)
+    drivetrain2.turn_for(RIGHT, 180, DEGREES, 50, RPM)
+    intakeMotors.spin(FORWARD)
+    drivetrain2.drive_for(FORWARD, 11, INCHES, 50, RPM)
+    wait(5, SECONDS)
+    intakeMotors.stop()
 
-#     #Moving to the long goal
-#     drivetrain.drive_for(REVERSE, 10, INCHES)
-#     drivetrain.turn_for(RIGHT, 180, DEGREES)
-#     drivetrain.drive_for(FORWARD, 10, INCHES)
-#     heightMech.open()
-#     wait(1, SECONDS)
-#     intakeMotors.spin(FORWARD)
-#     wait(4, SECONDS)
-#     intakeMotors.stop()
+    #Moving to the long goal
+    drivetrain2.drive_for(REVERSE, 10, INCHES, 50, RPM)
+    drivetrain2.turn_for(RIGHT, 180, DEGREES, 50, RPM)
+    drivetrain2.drive_for(FORWARD, 10, INCHES, 50, RPM)
+    heightMech.open()
+    wait(1, SECONDS)
+    intakeMotors.spin(FORWARD)
+    wait(4, SECONDS)
+    intakeMotors.stop()
 
 
     
@@ -295,23 +298,23 @@ def user_control():
             heightMech.close()
         # controller.buttonLeft.pressed(flap.open)
         # controller.buttonRight.pressed(flap.close)
-        brain.screen.clear_screen()
-        brain.screen.set_cursor(1, 1)
-        brain.screen.set_pen_width(2)
-        brain.screen.print("Drive: " + str(drive))
+        # brain.screen.clear_screen()
+        # brain.screen.set_cursor(1, 1)
+        # brain.screen.set_pen_width(2)
+        # brain.screen.print("Drive: " + str(drive))
         left_speed = controller.axis3.position()#drive + turn
         right_speed = controller.axis2.position() #drive - turn
         # Clamp to valid motor range
         left_speed = max(-100, min(100, left_speed))
         right_speed = max(-100, min(100, right_speed))
         if abs(left_speed) < 3 and abs(right_speed) < 3:
-            drivetrain.stop()
+            drivetrain2.stop()
         else:
             #leftMotorGroup.set_velocity(left_speed, PERCENT)
             #rightMotorGroup.set_velocity(right_speed, PERCENT)
             #leftMotorGroup.spin(FORWARD)
             #rightMotorGroup.spin(FORWARD)
-            drivetrain.drive(FORWARD)
+            drivetrain2.drive(FORWARD)
 
         wait(20, MSEC)
 
