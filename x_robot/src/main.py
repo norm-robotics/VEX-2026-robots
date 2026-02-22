@@ -133,9 +133,9 @@ class PIDController:
 
 
 # PID controllers for chassis axes (lin x, lin y, ang z)
-chassis_x_pid = PIDController(kp=0.6, ki=0.0, kd=0.08, max_output=100)
-chassis_y_pid = PIDController(kp=0.6, ki=0.0, kd=0.08, max_output=100)
-chassis_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.1, max_output=100)
+chassis_x_pid = PIDController(kp=0.5, ki=0.0, kd=0.00, max_output=100)
+chassis_y_pid = PIDController(kp=0.5, ki=0.0, kd=0.00, max_output=100)
+chassis_heading_pid = PIDController(kp=0.05, ki=0.0, kd=0.0, max_output=100)
 
 
 
@@ -155,6 +155,46 @@ chassis_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.1, max_output=100)
 #     currentY = gps.y_position()
 #     currentYaw = gps.heading()
 
+def select_team_color():
+    global team_color
+
+    brain.screen.clear_screen()
+    brain.screen.set_cursor(3, 5)
+    brain.screen.print("Select team color:")
+    brain.screen.set_cursor(5, 3)
+    brain.screen.print("Left = RED   Right = BLUE")
+
+    controller.screen.clear_screen()
+    controller.screen.set_cursor(1, 1)
+    controller.screen.print("LEFT=RED RIGHT=BLUE")
+
+    # Wait for a button press on the controller
+    while True:
+        if controller.buttonLeft.pressing():
+            team_color = "red"
+            break
+        elif controller.buttonRight.pressing():
+            team_color = "blue"
+            break
+        wait(50, MSEC)
+
+    # Confirm on both screens
+    controller.screen.clear_screen()
+    controller.screen.set_cursor(1, 1)
+    controller.screen.print("Team: " + team_color.upper())
+
+    brain.screen.clear_screen()
+    if team_color == "red":
+        brain.screen.set_fill_color(Color.RED)
+    else:
+        brain.screen.set_fill_color(Color.BLUE)
+    brain.screen.set_pen_color(Color.WHITE)
+    brain.screen.draw_rectangle(0, 0, 480, 240)
+    brain.screen.set_cursor(5, 10)
+    brain.screen.print("Team: " + team_color.upper())
+    wait(800, MSEC)
+    brain.screen.clear_screen()
+
 
 def autonomous():
     gps.calibrate()
@@ -167,83 +207,95 @@ def autonomous():
     snapX = gps.x_position()
     snapY = gps.y_position()
     snapYaw = gps.heading()
-
     while True:
 
         # Scan for game elements & publish positions each tick
-        scan_and_publish_elements()
+        # scan_and_publish_elements()
 
-        # Check outtake color – eject if wrong alliance color
-        check_outtake_color()
-        if is_wrong_color():
-            eject_wrong_element()
+        # # Check outtake color – eject if wrong alliance color
+        # check_outtake_color()
+        # if is_wrong_color():
+        #     eject_wrong_element()
 
         # ---- step 0: drive forward 36 in ----
         if step == 0:
-            if driveToPoint(snapX+6, snapY + 36, snapYaw+180):
-                matchLoadMech.open()
+            if driveToPoint(snapX, snapY - 14, snapYaw):
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
                 step = 1
 
-        # ---- step 1: drive left 12 in ----
-        elif step == 1:
-            if driveToPoint(snapX - 18, snapY, snapYaw):
+        if step == 1:
+            if driveToPoint(snapX, snapY, snapYaw+180):
                 intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
+                matchLoadMech.open()
                 wait_start = brain.timer.time()
                 step = 2
 
-        # ---- step 2: wait 1 s for intake ----
+        # ---- step 1: drive left 12 in ----
         elif step == 2:
+            if driveToPoint(snapX - 6, snapY, snapYaw):
+                wait_start = brain.timer.time()
+                step = 3
+
+        # ---- step 2: wait 1 s for intake ----
+        elif step == 3:
             if brain.timer.time() - wait_start >= 1000:
                 intakeMotors.stop()
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
-                step = 3
+                step = 4
 
         # ---- step 3: drive right 6 in ----
-        elif step == 3:
+        elif step == 4:
             if driveToPoint(snapX + 6, snapY, snapYaw):
                 matchLoadMech.close()
                 heightMech.open()
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
-                step = 4
+                step = 5
 
         # ---- step 4: drive right 24 in, spin 180° ----
-        elif step == 4:
-            if driveToPoint(snapX + 24, snapY, snapYaw - 180):
+        elif step == 5:
+            if driveToPoint(snapX + 24, snapY, snapYaw):
+                intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
+                outtakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
+                step = 6
+
+        elif step == 6:
+            if driveToPoint(snapX + 24, snapY, snapYaw + 180):
                 intakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
                 outtakeMotors.spin(FORWARD, 100, VelocityUnits.PERCENT)
                 wait_start = brain.timer.time()
-                step = 5
+                step = 7
 
         # ---- step 5: wait 1 s for outtake ----
-        elif step == 5:
+        elif step == 7:
             if brain.timer.time() - wait_start >= 1000:
                 outtakeMotors.stop()
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
-                step = 6
+                step = 8
 
         # ---- step 6: drive forward 12 in, turn -90° ----
-        elif step == 6:
-            if driveToPoint(snapX, snapY + 12, snapYaw - 90):
+        elif step == 8:
+            if driveToPoint(snapX + 12, snapY, snapYaw - 90):
                 heightMech.close()
                 wait_start = brain.timer.time()
-                step = 7
+                step = 9
 
         # ---- step 7: wait 500 ms ----
-        elif step == 7:
+        elif step == 9:
             if brain.timer.time() - wait_start >= 500:
                 snapX = gps.x_position()
                 snapY = gps.y_position()
                 snapYaw = gps.heading()
-                step = 8
+                step = 10
+                intakeMotors.stop()
+                outtakeMotors.stop()    
 
         # ---- step 8: drive right 96 in ----
         # elif step == 8:
@@ -287,6 +339,8 @@ def autonomous():
 
 def user_control():
     gps.calibrate()
+    select_team_color()
+
     brain.screen.clear_screen()
     # color = optical.color()
     brain.screen.print("driver control")
@@ -301,11 +355,19 @@ def user_control():
     prev_left = False
     prev_right = False
 
+    # Sensitivity: 0.0–1.0 (lower = slower / less sensitive)
+    DRIVE_SENSITIVITY = 0.5
+    TURN_SENSITIVITY  = 0.4
+
     # place driver control in this while loop
     while True:
-        rotation = controller.axis2.position()
-        Ypos = -controller.axis3.position()
-        Xpos = -controller.axis4.position()
+        # Cubic curve: (axis/100)^3 * 100 * sensitivity → smoother fine control
+        raw_rot = controller.axis1.position()
+        raw_y   = controller.axis3.position()
+        raw_x   = controller.axis4.position()
+        rotation = -(raw_rot / 100.0) ** 3 * 100.0 * TURN_SENSITIVITY  if raw_rot != 0 else 0  # right stick X
+        Ypos     = -(raw_y   / 100.0) ** 3 * 100.0 * DRIVE_SENSITIVITY if raw_y   != 0 else 0  # left stick Y
+        Xpos     = -(raw_x   / 100.0) ** 3 * 100.0 * DRIVE_SENSITIVITY if raw_x   != 0 else 0  # left stick X
         # ---- Intake with color indexing ----
         if controller.buttonR1.pressing():
             # Check intake color before running forward
@@ -611,47 +673,7 @@ def driveToPoint(targetX, targetY, targetHeading):
     return False
 
 # ---- Pre-match team color selection via Controller ----
-def select_team_color():
-    global team_color
 
-    brain.screen.clear_screen()
-    brain.screen.set_cursor(3, 5)
-    brain.screen.print("Select team color:")
-    brain.screen.set_cursor(5, 3)
-    brain.screen.print("Left = RED   Right = BLUE")
-
-    controller.screen.clear_screen()
-    controller.screen.set_cursor(1, 1)
-    controller.screen.print("LEFT=RED RIGHT=BLUE")
-
-    # Wait for a button press on the controller
-    while True:
-        if controller.buttonLeft.pressing():
-            team_color = "red"
-            break
-        elif controller.buttonRight.pressing():
-            team_color = "blue"
-            break
-        wait(50, MSEC)
-
-    # Confirm on both screens
-    controller.screen.clear_screen()
-    controller.screen.set_cursor(1, 1)
-    controller.screen.print("Team: " + team_color.upper())
-
-    brain.screen.clear_screen()
-    if team_color == "red":
-        brain.screen.set_fill_color(Color.RED)
-    else:
-        brain.screen.set_fill_color(Color.BLUE)
-    brain.screen.set_pen_color(Color.WHITE)
-    brain.screen.draw_rectangle(0, 0, 480, 240)
-    brain.screen.set_cursor(5, 10)
-    brain.screen.print("Team: " + team_color.upper())
-    wait(800, MSEC)
-    brain.screen.clear_screen()
-
-select_team_color()
 
 comp = Competition(user_control, autonomous)
 
