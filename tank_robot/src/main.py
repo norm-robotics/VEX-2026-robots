@@ -11,7 +11,6 @@
 from vex import *
 
 brain = Brain()
-#FIXME: Ports are not correct
 leftTopFrontMotor = Motor(Ports.PORT3, True)
 leftTopRearMotor = Motor(Ports.PORT10, True)
 leftLowerMotor = Motor(Ports.PORT4, True)
@@ -27,7 +26,7 @@ intakeMotors = MotorGroup(outtakeRearMotor, intakeMotor)
 gps = Gps(Ports.PORT20)
 drivetrain = SmartDrive(leftMotorGroup, rightMotorGroup, gps, 9.709, 8, 11.1, DistanceUnits.IN, 37/63)
 heightMech = Pneumatics(brain.three_wire_port.a)
-flap = Pneumatics(brain.three_wire_port.b)
+# flap = Pneumatics(brain.three_wire_port.b)
 
 def autonomous():
     brain.screen.clear_screen()
@@ -151,6 +150,67 @@ def autonomous():
     wait(2, SECONDS)
     intakeMotors.stop()
     drivetrain.stop()
+
+def autonomous_match():
+    brain.screen.clear_screen()
+    brain.screen.print("Autonomous match")
+
+
+    #Gunning for the FFA
+    drivetrain.turn_for(LEFT, 45, DEGREES)
+    drivetrain.drive_for(FORWARD, 53.62, INCHES)
+    intakeMotors.spin(FORWARD)
+    drivetrain.turn_for(LEFT, 45, DEGREES)
+    drivetrain.drive_for(FORWARD, 36, INCHES)
+    drivetrain.turn_for(LEFT, 90, DEGREES)
+    wait(5, SECONDS)
+    intakeMotors.stop()
+    drivetrain.drive_for(FORWARD, 24, INCHES)
+    intakeMotors.spin(REVERSE)
+    wait(3, SECONDS)
+    intakeMotors.stop()
+
+
+    #Moving to the nearest match loader
+    drivetrain.turn_for(RIGHT, 45, DEGREES)
+    drivetrain.drive_for(FORWARD, 31.69, INCHES)
+    drivetrain.turn_for(RIGHT, 45, DEGREES)
+    intakeMotors.spin(FORWARD)
+    drivetrain.drive_for(FORWARD, 11, INCHES)
+    wait(5, SECONDS)
+    intakeMotors.stop()
+
+    #Moving to the left long goal
+    drivetrain.drive_for(REVERSE, 3, INCHES)
+    drivetrain.turn_for(RIGHT, 180, DEGREES)
+    drivetrain.drive_for(FORWARD, 43.55, INCHES)
+    heightMech.open()
+    wait(1, SECONDS)
+    outtakeFrontMotor.spin(FORWARD)
+    intakeMotors.spin(FORWARD)
+    wait(2, SECONDS)
+    intakeMotors.stop()
+    heightMech.close()
+
+    #Moving back to the loader
+    drivetrain.drive_for(REVERSE, 12, INCHES)
+    drivetrain.turn_for(RIGHT, 180, DEGREES)
+    intakeMotors.spin(FORWARD)
+    drivetrain.drive_for(FORWARD, 11, INCHES)
+    wait(5, SECONDS)
+    intakeMotors.stop()
+
+    #Moving to the long goal
+    drivetrain.drive_for(REVERSE, 10, INCHES)
+    drivetrain.turn_for(RIGHT, 180, DEGREES)
+    drivetrain.drive_for(FORWARD, 10, INCHES)
+    heightMech.open()
+    wait(1, SECONDS)
+    intakeMotors.spin(FORWARD)
+    wait(4, SECONDS)
+    intakeMotors.stop()
+
+
     
 
 def user_control():
