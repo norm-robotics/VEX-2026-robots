@@ -39,11 +39,12 @@
 | :----: | :-----: | :----- |
 
 <table>
-  <tr>
-    <td>One</td>
-    <td>Two</td>
-  </tr>
-  <tr>
-    <td colspan="2">Three</td>
-  </tr>
+ <tr>
+  <th colspan='3'><b>Brain Port Connections</b></th>
+ </tr>
+ <tr>
+  <th>Type of Connection</th>
+  <th>Tank (<b>15"</b>)</th>
+  <th>X (<b>24"</b>)</th>
+ </tr>
 </table>
