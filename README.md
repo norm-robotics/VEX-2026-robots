@@ -32,4 +32,13 @@
   * Rear Right: Port \#1
   * Rear Left: Port \#9
 3. Outtake Motors:
-  * 
+  * Flex Motors: Port \#21
+4. Intake Motors:
+  * Ground Motor: Port \#8
+  * Big Motor: Port \#3
+5. Sensor Ports:
+  * GPS: Port \#12
+6. Pneumatics:
+  * Outtake Lift Right: 3-wire Port **b**
+  * Flap: 3-wire Port **c**
+  * Match Loader: 3-wire Port **a**
