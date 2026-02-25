@@ -2,7 +2,7 @@
 
 ## TANK Robot (**15")
 1. Bottom DriveTrain Motors:
-  * Left Motor: Port \#4
+  *  Left Motor: Port \#4
   * Right Motor: Port \#2
 2. Upper DriveTrain Motors:
   * Left Front Motor: Port \#3
