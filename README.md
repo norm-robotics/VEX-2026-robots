@@ -44,7 +44,7 @@
  </tr>
  <tr>
   <th>Type of Connection</th>
-  <th>Tank (<b>15"</b>)</th>
-  <th>X (<b>24"</b>)</th>
+  <th>Tank (<i>15"</i>)</th>
+  <th>X (<i>24"</i>)</th>
  </tr>
 </table>
