@@ -33,7 +33,7 @@
   * Rear Left: Port \#9
 3. Outtake Motors:
 
-| **Brain Port Connections** |||
-| :------: |||
+||| **Brain Port Connections** |||
+||| :------: |||
 | Type | Tank (*15"*) | X (*24"*) |
 | :----: | :-----: | :----- |
