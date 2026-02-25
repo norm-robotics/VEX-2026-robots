@@ -34,6 +34,6 @@
 3. Outtake Motors:
 
 | **Brain Port Connections** |||
-| :------: |
+| :------: |||
 | Type | Tank (*15"*) | X (*24"*) |
 | :----: | :-----: | :----- |
