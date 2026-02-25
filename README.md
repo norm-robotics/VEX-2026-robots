@@ -31,3 +31,5 @@
   * Front Left: Port \#6
   * Rear Right: Port \#1
   * Rear Left: Port \#9
+3. Outtake Motors:
+  * 
