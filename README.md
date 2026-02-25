@@ -1,7 +1,5 @@
-PORT connections
+# PORT Connections
 
-TANK Robot:
-
-Bottom Motors:
-\begin{itemize}
-  \item Left Bottom Motor: Port \#4
+## TANK Robot:
+1. Bottom Motors:
+    * Left Bottom Motor: Port \#4
