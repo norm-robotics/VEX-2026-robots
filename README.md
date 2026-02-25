@@ -1,6 +1,6 @@
 # PORT Connections
 
-## TANK Robot (**15")
+## TANK Robot (**15"**)
 1. Bottom DriveTrain Motors:
      * Left Motor: Port \#4
      * Right Motor: Port \#2
