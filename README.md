@@ -40,5 +40,5 @@
      * GPS: Port \#12
 6. Pneumatics:
      * Outtake Lift Right: 3-wire Port **b**
-     * Flap: 3-wire Port **c**
+     * Descore: 3-wire Port **c**
      * Match Loader: 3-wire Port **a**
