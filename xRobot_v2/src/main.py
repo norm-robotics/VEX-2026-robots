@@ -29,15 +29,15 @@ controller = Controller()
 #================================
 #Bottom DriveTrain Motors
 lBottFront = Motor(Ports.PORT5, GearSetting.RATIO_6_1, True)
-lBottBack = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
+lBottBack = Motor(Ports.PORT2, GearSetting.RATIO_6_1, True)
 rBottFront = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
-rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, True)
+rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
 
 #Upper DriveTrain Motors
 lUpFront = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
-lUpBack = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
+lUpBack = Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
 rUpFront = Motor(Ports.PORT6, GearSetting.RATIO_6_1, True)
-rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, False)
+rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, True)
 
 #Intake Motors
 intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
@@ -76,8 +76,8 @@ def user_control():
     # place driver control in this while loop
     while True:
         turn = controller.axis1.position()  
-        xPos = controller.axis3.position()  
-        yPos = controller.axis4.position()
+        xPos = controller.axis4.position()  
+        yPos = controller.axis3.position()
         if(controller.buttonR2.pressing()):
             intakeMG.spin(FORWARD)
         elif(controller.buttonR1.pressing()):
@@ -108,12 +108,13 @@ def user_control():
 
         XJoystickDrive(xPos, yPos, turn)
         wait(20, MSEC)
+
 def XJoystickDrive(Xpos, Ypos, turn):
     if(abs(Xpos) > deadZone or abs(Ypos) > deadZone or abs(turn) > deadZone):
         frontRightSpeed = Ypos - Xpos - turn
-        rearRightSpeed = Ypos + Xpos - turn
-        frontLeftSpeed = -Ypos - Xpos - turn
-        rearLeftSpeed = -Ypos + Xpos - turn
+        rearRightSpeed = Ypos - Xpos + turn
+        frontLeftSpeed = Ypos + Xpos + turn
+        rearLeftSpeed = Ypos + Xpos - turn
 
         rearLeftMG.spin(FORWARD, rearLeftSpeed, PERCENT)
         rearRightMG.spin(FORWARD, rearRightSpeed, PERCENT)
