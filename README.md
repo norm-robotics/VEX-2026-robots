@@ -22,15 +22,15 @@
 
 ## X-Drive Robot (**24"**)
 1. Bottom DriveTrain Motors:
-     * Front Right: Port \#5
-     * Front Left: Port \#7
-     * Rear Right: Port \#2
-     * Rear Left: Port \#10
+     * Front Left: Port \#5
+     * Front Right: Port \#7
+     * Rear Left: Port \#2
+     * Rear Right: Port \#10
 2. Upper DriveTrain Motors:
-     * Front Right: Port \#4
-     * Front Left: Port \#6
-     * Rear Right: Port \#1
-     * Rear Left: Port \#9
+     * Front Left: Port \#4
+     * Front Right: Port \#6
+     * Rear Left: Port \#1
+     * Rear Right: Port \#9
 3. Outtake Motors:
      * Flex Motors: Port \#21
 4. Intake Motors:
