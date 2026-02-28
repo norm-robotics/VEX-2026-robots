@@ -31,12 +31,12 @@ controller = Controller()
 lBottFront = Motor(Ports.PORT5, GearSetting.RATIO_6_1, True)
 lBottBack = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
 rBottFront = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
-rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
+rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, True)
 
 #Upper DriveTrain Motors
-lUpFront = Motor(Ports.PORT4, GearSetting.RATIO_6_1, True)
+lUpFront = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 lUpBack = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
-rUpFront = Motor(Ports.PORT6, GearSetting.RATIO_6_1, False)
+rUpFront = Motor(Ports.PORT6, GearSetting.RATIO_6_1, True)
 rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, False)
 
 #Intake Motors
@@ -60,10 +60,11 @@ rearRightMG = MotorGroup(rBottBack, rUpBack)
 frontLeftMG = MotorGroup(lBottFront, lUpFront)
 frontRightMG = MotorGroup(rBottFront, rUpFront)
 intakeMG = MotorGroup(intake, outFlap)
+intakeMG.set_velocity(100, PERCENT)
 
 
 #Controller Deadzone
-deadZone = 3
+deadZone = 10
 def autonomous():
     brain.screen.clear_screen()
     brain.screen.print("autonomous code")
@@ -75,8 +76,8 @@ def user_control():
     # place driver control in this while loop
     while True:
         turn = controller.axis1.position()  
-        yPos = controller.axis3.position()  
-        xPos = controller.axis4.position()
+        xPos = controller.axis3.position()  
+        yPos = controller.axis4.position()
         if(controller.buttonR2.pressing()):
             intakeMG.spin(FORWARD)
         elif(controller.buttonR1.pressing()):
@@ -110,9 +111,9 @@ def user_control():
 def XJoystickDrive(Xpos, Ypos, turn):
     if(abs(Xpos) > deadZone or abs(Ypos) > deadZone or abs(turn) > deadZone):
         frontRightSpeed = Ypos - Xpos - turn
-        rearRightSpeed = -Ypos - Xpos - turn
-        frontLeftSpeed = -Ypos - Xpos + turn
-        rearLeftSpeed = Ypos - Xpos + turn
+        rearRightSpeed = Ypos + Xpos - turn
+        frontLeftSpeed = -Ypos - Xpos - turn
+        rearLeftSpeed = -Ypos + Xpos - turn
 
         rearLeftMG.spin(FORWARD, rearLeftSpeed, PERCENT)
         rearRightMG.spin(FORWARD, rearRightSpeed, PERCENT)

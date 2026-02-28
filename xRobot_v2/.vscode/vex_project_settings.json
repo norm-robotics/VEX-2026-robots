@@ -4,7 +4,11 @@
 		"json": 2
 	},
 	"project": {
+<<<<<<< Updated upstream
 		"name": "X_code",
+=======
+		"name": "xRobot_v2",
+>>>>>>> Stashed changes
 		"description": "",
 		"creationDate": "2/27/2026, 11:10:03 PM",
 		"platform": "V5",
