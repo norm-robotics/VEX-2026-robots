@@ -50,8 +50,16 @@ intakeMG = MotorGroup(intake, outFlap)
 #Calling required constructors
 drivetrain = DriveTrain(leftMG, rightMG)
 
+#======================================
+#Autonomous Skills Code
+#======================================
+
 def autonomous():
     pass
+
+#======================================
+#Driver Skills Code
+#======================================
 
 def user_control():
     brain.screen.clear_screen()
@@ -85,22 +93,23 @@ def user_control():
         elif controller.buttonDown.pressing():
             heightMech.close()
 
-        turn = 0.65*controller.axis1.position()
-        drive = 0.85*controller.axis3.position()
+        turn = 0.5*controller.axis1.position()
+        drive = 0.65*controller.axis3.position()
 
         leftSpeed = drive + turn
         rightSpeed = drive - turn
 
-        leftDead = max(-100, min(100, leftSpeed))
-        rightDead = max(-100, min(100, rightSpeed))
+        #leftDead = max(-100, min(100, leftSpeed))
+        #rightDead = max(-100, min(100, rightSpeed))
 
-        leftMG.set_velocity((leftSpeed), PERCENT)
-        rightMG.set_velocity((rightSpeed), PERCENT)
+        #leftMG.set_velocity((leftSpeed), PERCENT)
+        #rightMG.set_velocity((rightSpeed), PERCENT)
 
-        if (abs(leftDead) < 2) or (abs(rightDead) < 2):
+        if (abs(leftSpeed) < 2) or (abs(rightSpeed) < 2):
             drivetrain.stop()
         else:
-            drivetrain.drive(FORWARD)
+            leftMG.spin(FORWARD, leftSpeed, PERCENT)
+            rightMG.spin(FORWARD, rightSpeed, PERCENT)
         
         wait(20, MSEC)
 
