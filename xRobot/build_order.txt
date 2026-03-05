@@ -1,8 +1,10 @@
 # Modules are merged into src/main.py in the order listed here.
 # Lines starting with # are ignored.
 config.py
+utils.py
+pid.py
+init.py
 inverse_kinematics.py
 autonomous.py
 driver_control.py
 entry.py
-cd.

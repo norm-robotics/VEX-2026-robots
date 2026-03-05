@@ -1,6 +1,7 @@
 # Library imports
 from vex import *
 
+
 # Brain and controller should be defined by default
 brain=Brain()
 controller = Controller()
@@ -25,10 +26,11 @@ intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
 
 #Outtake Motors
 outFlex = Motor(Ports.PORT21, GearSetting.RATIO_6_1, False)
-outFlap = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
+outFlap = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
+imu = Inertial(Ports.PORT3)
 
 #Pneumatics
 matchLoad = Pneumatics(brain.three_wire_port.a)
@@ -45,4 +47,10 @@ intakeMG.set_velocity(100, PERCENT)
 
 
 #Controller Deadzone
-deadZone = 10
+DEADZONE = 10
+POSITION_TOLERANCE = 2.0   # inches – how close is "arrived"
+HEADING_TOLERANCE  = 5.0   # degrees
+SETTLE_CYCLES      = 3     # must stay within tolerance this many loops (~60 ms)
+TIMEOUT_MS         = 8000  # give up after this long
+
+FIELD_ORIENTED = True
