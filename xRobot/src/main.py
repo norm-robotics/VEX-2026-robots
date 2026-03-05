@@ -25,7 +25,7 @@ rBottFront = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
 rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
 
 #Upper DriveTrain Motors
-lUpFront = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
+lUpFront = Motor(Ports.PORT4, GearSetting.RATIO_6_1,False)
 lUpBack = Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
 rUpFront = Motor(Ports.PORT6, GearSetting.RATIO_6_1, True)
 rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, True)
@@ -35,7 +35,7 @@ intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
 
 #Outtake Motors
 outFlex = Motor(Ports.PORT21, GearSetting.RATIO_6_1, False)
-outFlap = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
+outFlap = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
@@ -52,6 +52,7 @@ frontLeftMG = MotorGroup(lBottFront, lUpFront)
 frontRightMG = MotorGroup(rBottFront, rUpFront)
 intakeMG = MotorGroup(intake, outFlap)
 intakeMG.set_velocity(100, PERCENT)
+outFlex.set_velocity(100, PERCENT)
 
 
 #Controller Deadzone
@@ -93,9 +94,9 @@ def user_control():
     brain.screen.print("driver control")
     # place driver control in this while loop
     while True:
-        turn = controller.axis1.position()  
-        xPos = controller.axis4.position()  
-        yPos = controller.axis3.position()
+        turn = -controller.axis4.position()  
+        xPos = controller.axis1.position()  
+        yPos = -controller.axis3.position()
         if(controller.buttonR2.pressing()):
             intakeMG.spin(FORWARD)
         elif(controller.buttonR1.pressing()):
@@ -103,9 +104,9 @@ def user_control():
         else:
             intakeMG.stop()
         if(controller.buttonL2.pressing()):
-            outFlex.spin(FORWARD)
+            outFlex.spin(FORWARD, 100, PERCENT)
         elif(controller.buttonL1.pressing()):
-            outFlex.spin(REVERSE)
+            outFlex.spin(REVERSE, 100, PERCENT)
         else:
             outFlex.stop()
         
