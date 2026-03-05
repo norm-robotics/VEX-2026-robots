@@ -52,9 +52,8 @@ intakeMG = MotorGroup(intake, outFlap)
 #Calling required constructors
 drivetrain = DriveTrain(leftMG, rightMG)
 
-maxAccn = 2.0 # in/s^2, experimentally determined max acceleration for the drive
+maxAccn = 10.0 # in/s^2, experimentally determined max acceleration for the drive
 maxVelocity = 340/60*(3.25)*math.pi # in/s, theoretical max velocity of the drive (motor free speed * wheel circumference)
-lastForwardVelocity = 0.0
 
 #======================================
 #Clamp Function
@@ -66,7 +65,7 @@ def clamp(val, minVal, maxVal):
 #Accn Clamp
 #======================================
 def deltaVMax(dt):
-    if dt < 0.002:
+    if dt < 0.02:
         dt = 0.02
 
     return maxAccn*dt/maxVelocity*100.0
@@ -159,6 +158,7 @@ def user_control():
     brain.screen.print("DRIVER MODE =(")
     
     #Defining max speeds for moving and turning
+    lastForwardVelocity = 0.0
 
     while True:
         timestamp = brain.timer.time()
