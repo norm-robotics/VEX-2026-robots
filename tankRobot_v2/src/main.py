@@ -36,6 +36,7 @@ outFlap = Motor(Ports.PORT15, GearSetting.RATIO_18_1, False)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
+imu = Inertial(Ports.PORT14)
 
 #Pneumatics
 heightMech = Pneumatics(brain.three_wire_port.a)
@@ -49,6 +50,95 @@ intakeMG = MotorGroup(intake, outFlap)
 
 #Calling required constructors
 drivetrain = DriveTrain(leftMG, rightMG)
+
+maxAccn = 2.0
+
+#======================================
+#Clamp Function
+#======================================
+def clamp(val, minVal, maxVal):
+    return max(min(val, maxVal), minVal)
+
+#======================================
+#Accn Clamp
+#======================================
+def deltaVMax(dt):
+    if dt < 0.002:
+        dt = 0.02
+
+    return maxAccn*dt
+
+#======================================
+#Normalizing Angle
+#======================================
+def normalizeAngle(angle):
+    if angle > 180:
+        angle -= 360
+    elif angle < -180:
+        angle += 360
+    
+    return angle*math.pi/180.0
+
+#======================================
+#PID Class
+#======================================
+class PID:
+    def __init__(self, kp, ki, kd, maxOutput = 100):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.maxOutput = maxOutput
+        self.integral = 0
+        self.derivative = 0
+        self.prevError = 0
+        self.lastTime = 0
+
+    def step(self, error, currTime):
+        if self.lastTime == 0:
+            dt = 0.002
+        else:
+            dt = (currTime - self.lastTime) / 1000.0
+
+        #Finding proportional output
+        p = self.kp * error
+
+        #Finding integral output
+        self.integral += error * dt
+        i = self.ki * self.integral
+        if i > self.maxOutput or i < -self.maxOutput:
+            i = self.maxOutput
+            self.integral = clamp(self.integral, -self.maxOutput, self.maxOutput)
+
+        #Finding derivative output
+        if dt > 0:
+            self.derivative = (error - self.prevError) / dt
+        else:
+            self.derivative = 0
+        
+        d = self.kd * self.derivative
+
+        #Calculating, clamping and returning output
+        output = clamp((p + i + d), -self.maxOutput, self.maxOutput)
+        return output
+
+    def calcError(self, targetVal, currVal, currTime, angle):
+        if angle:
+            error = normalizeAngle(targetVal - currVal)
+        else:
+            error = targetVal - currVal
+    
+        return self.step(error, currTime)
+
+#======================================
+#Joystick Curve
+#======================================
+def joystickCurve(position, exponent):
+    curve = ((abs(position) / 100.0) ** exponent) * 100.0 #100 is maximum joystick input in all directions
+
+    if position < 0:
+        return -curve
+    else:
+        return curve
 
 #======================================
 #Autonomous Skills Code
@@ -68,6 +158,7 @@ def user_control():
     #Defining max speeds for moving and turning
 
     while True:
+        timestamp = brain.timer.time()
     #-----------------------------------------------
         #Defining buttons on the controller
     #-----------------------------------------------
@@ -93,18 +184,16 @@ def user_control():
         elif controller.buttonDown.pressing():
             heightMech.close()
 
-        turn = 0.5*controller.axis1.position()
-        drive = 0.65*controller.axis3.position()
+        currTime = brain.timer.time()
+        dt = currTime -timestamp
+        
+        turn = joystickCurve(controller.axis1.position(), 3.0)
+        drive = joystickCurve(controller.axis3.position(), 3.0)
+        driveVel = clamp(drive, leftMG.velocity(PERCENT) - deltaVMax(dt), leftMG.velocity(PERCENT) + deltaVMax(dt))
 
-        leftSpeed = drive + turn
-        rightSpeed = drive - turn
-
-        #leftDead = max(-100, min(100, leftSpeed))
-        #rightDead = max(-100, min(100, rightSpeed))
-
-        #leftMG.set_velocity((leftSpeed), PERCENT)
-        #rightMG.set_velocity((rightSpeed), PERCENT)
-
+        leftSpeed = clamp(driveVel + turn, -70, 70)
+        rightSpeed = clamp(driveVel - turn, -70, 70)
+            
         if (abs(leftSpeed) < 2) or (abs(rightSpeed) < 2):
             drivetrain.stop()
         else:
@@ -117,5 +206,4 @@ def user_control():
 comp = Competition(user_control, autonomous)
 
 # actions to do when the program starts
-brain.screen.clear_screen()
-    
+brain.screen.clear_screen()    
