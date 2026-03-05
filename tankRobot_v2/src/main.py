@@ -9,6 +9,7 @@
 
 # Library imports
 from vex import *
+import math
 
 # Brain and controller should be defined by default
 brain=Brain()
@@ -51,7 +52,9 @@ intakeMG = MotorGroup(intake, outFlap)
 #Calling required constructors
 drivetrain = DriveTrain(leftMG, rightMG)
 
-maxAccn = 2.0
+maxAccn = 2.0 # in/s^2, experimentally determined max acceleration for the drive
+maxVelocity = 340/60*(3.25)*math.pi # in/s, theoretical max velocity of the drive (motor free speed * wheel circumference)
+lastForwardVelocity = 0.0
 
 #======================================
 #Clamp Function
@@ -66,7 +69,7 @@ def deltaVMax(dt):
     if dt < 0.002:
         dt = 0.02
 
-    return maxAccn*dt
+    return maxAccn*dt/maxVelocity*100.0
 
 #======================================
 #Normalizing Angle
@@ -189,10 +192,12 @@ def user_control():
         
         turn = joystickCurve(controller.axis1.position(), 3.0)
         drive = joystickCurve(controller.axis3.position(), 3.0)
-        driveVel = clamp(drive, leftMG.velocity(PERCENT) - deltaVMax(dt), leftMG.velocity(PERCENT) + deltaVMax(dt))
+        driveVel = clamp(drive, lastForwardVelocity - deltaVMax(dt), lastForwardVelocity + deltaVMax(dt))
 
         leftSpeed = clamp(driveVel + turn, -70, 70)
         rightSpeed = clamp(driveVel - turn, -70, 70)
+
+        lastForwardVelocity = driveVel
             
         if (abs(leftSpeed) < 2) or (abs(rightSpeed) < 2):
             drivetrain.stop()
