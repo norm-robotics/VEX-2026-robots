@@ -35,9 +35,9 @@ intake = Motor(Ports.PORT17, GearSetting.RATIO_6_1, False)
 outFlex = Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
 outFlap = Motor(Ports.PORT15, GearSetting.RATIO_18_1, False)
 
-#sensor Motors
-gps = Gps(Ports.PORT20)
-imu = Inertial(Ports.PORT14)
+# #sensor Motors
+# gps = Gps(Ports.PORT20)
+imu = Inertial(Ports.PORT20)
 
 #Pneumatics
 heightMech = Pneumatics(brain.three_wire_port.a)
@@ -50,7 +50,7 @@ intakeMG = MotorGroup(intake, outFlap)
 
 
 #Calling required constructors
-drivetrain = DriveTrain(leftMG, rightMG)
+drivetrain = SmartDrive(leftMG, rightMG, imu)
 
 maxAccn = 10.0 # in/s^2, experimentally determined max acceleration for the drive
 maxVelocity = 340/60*(3.25)*math.pi # in/s, theoretical max velocity of the drive (motor free speed * wheel circumference)
@@ -123,13 +123,16 @@ class PID:
         output = clamp((p + i + d), -self.maxOutput, self.maxOutput)
         return output
 
-    def calcError(self, targetVal, currVal, currTime, angle):
+    def calcError(self, targetVal, currVal, angle):
+        currTime = brain.timer.time()
         if angle:
             error = normalizeAngle(targetVal - currVal)
         else:
             error = targetVal - currVal
     
         return self.step(error, currTime)
+
+angleCorrect = PID(kp = 32, ki = 0.0, kd = 0.0)
 
 #======================================
 #Joystick Curve
@@ -146,8 +149,55 @@ def joystickCurve(position, exponent):
 #Autonomous Skills Code
 #======================================
 
+# def 
+
+def getDegree(x2, x1, y2, y1):
+    x = x2 - x1
+    y = y2 - y1
+
+    return math.atan(y/x) * 180/math.pi
+
+
+def getDist(x1, x2, y1, y2):
+    x = x2 - x1
+    y = y2 - y1
+
+    return math.sqrt((x**2) + (y**2))    
+
 def autonomous():
-    pass
+    
+    imu.calibrate()
+    while(imu.is_calibrating()):
+        wait(25, MSEC)
+    
+    #Moving to the middle of the field
+    theta = getDegree(93.78, 78.19, 70.72, 16.88)
+    dist1 = getDist(93.78, 78.19, 70.72, 16.88)
+
+    drivetrain.turn_to_heading(theta, DEGREES, wait=True)
+    wait(30, MSEC)
+    drivetrain.drive_for(FORWARD, dist1 - 15, INCHES, wait=False)
+    wait(30, MSEC)
+    intakeMG.spin(FORWARD, 100, PERCENT)
+    wait(25, MSEC)
+    drivetrain.turn_to_heading((math.pi / 2) - theta, DEGREES, )
+    wait(25, MSEC)
+
+    #Making in blocks towards the long goal
+    dist2 = getDist(109.92, 93.78, 70.22, 70.22)
+
+    drivetrain.drive_for(FORWARD, dist2, INCHES)
+    wait(35, MSEC)
+    intakeMG.stop()
+    wait(50, MSEC)
+
+    #Reversing to central long goal position
+    dist3 = getDist(62.23 - 7.5, 70.22, 70.22, 106.69)
+    outFlex.spin(FORWARD, 100, PERCENT)
+    wait(5000, MSEC)
+    outFlex.stop()
+    wait(50, MSEC)
+    heightMech.close()
 
 #======================================
 #Driver Skills Code

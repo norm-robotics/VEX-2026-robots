@@ -37,7 +37,7 @@ intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
 
 #Outtake Motors
 outFlex = Motor(Ports.PORT21, GearSetting.RATIO_6_1, False)
-outFlap = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
+outFlap = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
@@ -55,6 +55,7 @@ frontLeftMG = MotorGroup(lBottFront, lUpFront)
 frontRightMG = MotorGroup(rBottFront, rUpFront)
 intakeMG = MotorGroup(intake, outFlap)
 intakeMG.set_velocity(100, PERCENT)
+outFlex.set_velocity(100, PERCENT)
 
 
 #Controller Deadzone
