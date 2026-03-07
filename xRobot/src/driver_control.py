@@ -67,14 +67,20 @@ def user_control():
             outFlex.stop()
 
         # --- Face buttons ---
-        # Y / X = heightMech
-        if controller.buttonY.pressing():
-            heightMech.open()
-        elif controller.buttonX.pressing():
-            heightMech.close()
+        # X = heightMech
+        if controller.buttonX.pressing():
+            if not heightMechOpen:
+                heightMech.open()
+                heightMechOpen = True
+            else:
+                heightMech.close()
+                heightMechOpen = False
+            # debounce – wait for release
+            while controller.buttonX.pressing():
+                wait(10, MSEC)
 
         # B = descore toggle
-        if controller.buttonB.pressing():
+        if controller.buttonY.pressing():
             if not descoreOpen:
                 descore.open()
                 descoreOpen = True
@@ -82,7 +88,7 @@ def user_control():
                 descore.close()
                 descoreOpen = False
             # debounce – wait for release
-            while controller.buttonB.pressing():
+            while controller.buttonY.pressing():
                 wait(10, MSEC)
 
         # A = reset IMU heading
@@ -91,6 +97,13 @@ def user_control():
             chassis_heading_pid.reset()
             # debounce – wait for release
             while controller.buttonA.pressing():
+                wait(10, MSEC)
+
+        # B = toggle field oriented drive
+        if controller.buttonB.pressing():
+            fieldOriented = not fieldOriented
+            # debounce – wait for release
+            while controller.buttonB.pressing():
                 wait(10, MSEC)
 
         XJoystickDrive(xPos, yPos, turn)

@@ -64,7 +64,7 @@ HEADING_TOLERANCE  = 5.0   # degrees
 SETTLE_CYCLES      = 3     # must stay within tolerance this many loops (~60 ms)
 TIMEOUT_MS         = 8000  # give up after this long
 
-FIELD_ORIENTED = True
+fieldOriented = True
 
 
 # ===== utils =====
@@ -206,7 +206,7 @@ chassis_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.2, max_output=50)
 
 def XJoystickDrive(Xpos, Ypos, turn):
     if(abs(Xpos) > DEADZONE or abs(Ypos) > DEADZONE or abs(turn) > DEADZONE):
-        if FIELD_ORIENTED:
+        if fieldOriented:
             Xpos, Ypos, turn = fieldOrientedControl(Xpos, Ypos, turn)
         frontRightSpeed = Ypos - Xpos - turn
         rearRightSpeed = Ypos + Xpos - turn

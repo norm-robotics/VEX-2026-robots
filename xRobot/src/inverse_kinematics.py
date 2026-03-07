@@ -5,7 +5,7 @@ from sensor_fusion import * # lsp-only
 
 def XJoystickDrive(Xpos, Ypos, turn):
     if(abs(Xpos) > DEADZONE or abs(Ypos) > DEADZONE or abs(turn) > DEADZONE):
-        if FIELD_ORIENTED:
+        if fieldOriented:
             Xpos, Ypos, turn = fieldOrientedControl(Xpos, Ypos, turn)
         frontRightSpeed = clamp(Ypos - Xpos - turn, -50, 50)
         rearRightSpeed = clamp(Ypos + Xpos - turn, -50, 50)

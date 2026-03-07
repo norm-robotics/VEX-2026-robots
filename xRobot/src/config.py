@@ -56,7 +56,7 @@ HEADING_TOLERANCE  = 5.0   # degrees
 SETTLE_CYCLES      = 3     # must stay within tolerance this many loops (~60 ms)
 TIMEOUT_MS         = 8000  # give up after this long
 
-FIELD_ORIENTED = True
+fieldOriented = True
 
 GPS_QUALITY_MIN = 80    
 ALPHA_MAX       = 0.9 
