@@ -8,6 +8,9 @@ def user_control():
     matchLoadOpen = False
     # place driver control in this while loop
     while True:
+        # Update sensor fusion each tick
+        fusion.update()
+
         # --- Heading control ---
         # D-pad snap-to-heading (overrides joystick while held)
         if controller.buttonUp.pressing():
@@ -22,51 +25,45 @@ def user_control():
             dpadHeading = -1
 
         # Right joystick sets target heading direction
-        rightX = controller.axis1.position()  # left/right
-        rightY = controller.axis2.position()  # forward/back
-        rightMag = math.sqrt(rightX ** 2 + rightY ** 2)
+        rightX = (controller.axis1.position() / 100) ** 3 * 100  # cubic curve
+        rightY = (controller.axis2.position() / 100) ** 3 * 100  # cubic curve
+        rightMag = math.sqrt(rightX**2 + rightY**2)
 
         if dpadHeading >= 0:
             # D-pad heading snap takes priority
-            currentHeading = imu.heading()
+            currentHeading = fusion.get_heading()
             headingError = normalize_angle_deg(dpadHeading - currentHeading)
-            turn = driver_heading_pid.calculate_angle_error(headingError, brain.timer.time())
+            turn = chassis_heading_pid.calculate_angle_error(headingError, brain.timer.time())
         elif rightMag > DEADZONE:
             targetHeading = joystick_to_heading(rightX, rightY)
-            currentHeading = imu.heading()
+            currentHeading = fusion.get_heading()
             headingError = normalize_angle_deg(targetHeading - currentHeading)
-            turn = driver_heading_pid.calculate_angle_error(headingError, brain.timer.time())
+            turn = chassis_heading_pid.calculate_angle_error(headingError, brain.timer.time())
         else:
             turn = 0
-            driver_heading_pid.reset()
+            chassis_heading_pid.reset()
 
-        xPos = controller.axis4.position()
-        yPos = controller.axis3.position()
+        xPos = (controller.axis4.position() / 100) ** 3 * 100  # cubic curve
+        yPos = (controller.axis3.position() / 100) ** 3 * 100  # cubic curve
 
         # --- Intake (bumpers) ---
-        if controller.buttonR2.pressing() and controller.buttonR1.pressing():
-            # R1+R2 combo: toggle match load
-            if not matchLoadOpen:
-                matchLoad.open()
-                matchLoadOpen = True
-            else:
-                matchLoad.close()
-                matchLoadOpen = False
-            # debounce – wait for release
-            while controller.buttonR2.pressing() and controller.buttonR1.pressing():
-                wait(10, MSEC)
-        elif controller.buttonR2.pressing():
+        
+        if controller.buttonR1.pressing():
             intakeMG.spin(FORWARD)
-        elif controller.buttonR1.pressing():
-            intakeMG.spin(REVERSE)
-        else:
-            intakeMG.stop()
+        
+        if controller.buttonR2.pressing():
+            outFlex.spin(FORWARD, 100, PERCENT)
+        
 
+        if controller.buttonL1.pressing():
+            intakeMG.spin(REVERSE)
+        
         if controller.buttonL2.pressing():
-            outFlex.spin(FORWARD)
-        elif controller.buttonL1.pressing():
-            outFlex.spin(REVERSE)
-        else:
+            outFlex.spin(REVERSE, 100, PERCENT)
+        
+        if not controller.buttonR1.pressing() and not controller.buttonL1.pressing():
+            intakeMG.stop()
+        if not controller.buttonR2.pressing() and not controller.buttonL2.pressing():
             outFlex.stop()
 
         # --- Face buttons ---
@@ -90,8 +87,8 @@ def user_control():
 
         # A = reset IMU heading
         if controller.buttonA.pressing():
-            imu.set_heading(0)
-            driver_heading_pid.reset()
+            fusion.set_heading(0)
+            chassis_heading_pid.reset()
             # debounce – wait for release
             while controller.buttonA.pressing():
                 wait(10, MSEC)

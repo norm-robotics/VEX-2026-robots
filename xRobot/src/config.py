@@ -11,7 +11,7 @@ controller = Controller()
 #================================
 #Bottom DriveTrain Motors
 lBottFront = Motor(Ports.PORT5, GearSetting.RATIO_6_1, True)
-lBottBack = Motor(Ports.PORT2, GearSetting.RATIO_6_1, True)
+lBottBack = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
 rBottFront = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
 rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
 
@@ -25,8 +25,8 @@ rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, True)
 intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
 
 #Outtake Motors
-outFlex = Motor(Ports.PORT21, GearSetting.RATIO_6_1, False)
-outFlap = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
+outFlex = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
+outFlap = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
@@ -46,6 +46,9 @@ intakeMG = MotorGroup(intake, outFlap)
 intakeMG.set_velocity(100, PERCENT)
 
 
+#Odometry / sensor fusion
+WHEEL_DIAMETER = 3.25  # inches – omni wheel diameter for encoder odometry
+
 #Controller Deadzone
 DEADZONE = 10
 POSITION_TOLERANCE = 2.0   # inches – how close is "arrived"
@@ -54,3 +57,8 @@ SETTLE_CYCLES      = 3     # must stay within tolerance this many loops (~60 ms)
 TIMEOUT_MS         = 8000  # give up after this long
 
 FIELD_ORIENTED = True
+
+GPS_QUALITY_MIN = 80    
+ALPHA_MAX       = 0.9 
+SLIP_ACCEL_THRESHOLD = 30.0  # in/s² – encoder vs IMU accel mismatch before scaling down encoder trust
+COLLISION_COOLDOWN_MS = 200  # ms – ignore encoders & IMU heading changes after a collision

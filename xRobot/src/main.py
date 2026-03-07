@@ -22,7 +22,7 @@ controller = Controller()
 #================================
 #Bottom DriveTrain Motors
 lBottFront = Motor(Ports.PORT5, GearSetting.RATIO_6_1, True)
-lBottBack = Motor(Ports.PORT2, GearSetting.RATIO_6_1, True)
+lBottBack = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
 rBottFront = Motor(Ports.PORT7, GearSetting.RATIO_6_1, False)
 rBottBack = Motor(Ports.PORT10, GearSetting.RATIO_6_1, False)
 
@@ -36,8 +36,8 @@ rUpBack = Motor(Ports.PORT9, GearSetting.RATIO_6_1, True)
 intake = Motor(Ports.PORT8, GearSetting.RATIO_6_1, False)
 
 #Outtake Motors
-outFlex = Motor(Ports.PORT21, GearSetting.RATIO_6_1, False)
-outFlap = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
+outFlex = Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)
+outFlap = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
 
 #sensor Motors
 gps = Gps(Ports.PORT20)
@@ -199,8 +199,7 @@ drive_state = DriveState()
 team_color = "red"
 chassis_x_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
 chassis_y_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
-chassis_heading_pid = PIDController(kp=0.2, ki=0.0, kd=0.2, max_output=100)
-driver_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.2, max_output=50)
+chassis_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.2, max_output=50)
 
 
 # ===== inverse_kinematics =====
@@ -253,19 +252,9 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
     heading_error = normalize_angle_deg(targetHeading - currentHeading)
     ang_z = chassis_heading_pid.calculate_error(heading_error, timestamp)
 
-    # Field → robot frame
-    robot_x, robot_y = fieldToRobot(lin_x, lin_y, currentHeading)
-
-    # X-drive mixing: Fwd = robot_y, Stf = robot_x, Turn = ang_z (CW positive)
-    front_right =  robot_y - robot_x - ang_z   # Fwd - Stf - Turn
-    front_left  =  robot_y + robot_x + ang_z   # Fwd + Stf + Turn
-    rear_right  =  robot_y + robot_x - ang_z   # Fwd + Stf - Turn
-    rear_left   =  robot_y - robot_x + ang_z   # Fwd - Stf + Turn
-
-    frontRightMG.spin(FORWARD, clamp(front_right, -100, 100), VelocityUnits.PERCENT)
-    frontLeftMG.spin(FORWARD, clamp(front_left, -100, 100), VelocityUnits.PERCENT)
-    rearRightMG.spin(FORWARD, clamp(rear_right, -100, 100), VelocityUnits.PERCENT)
-    rearLeftMG.spin(FORWARD, clamp(rear_left, -100, 100), VelocityUnits.PERCENT)
+    # Pass field-frame PID outputs to XJoystickDrive.
+    # fieldOrientedControl inside XJoystickDrive handles field→robot conversion.
+    XJoystickDrive(lin_x, lin_y, ang_z)
 
     # Settle check
     dist_error = math.sqrt((targetX - currentX) ** 2 + (targetY - currentY) ** 2)
@@ -278,10 +267,7 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
     timed_out = (timestamp - drive_state.start_time) > TIMEOUT_MS
 
     if arrived or timed_out:
-        rUpFront.stop()
-        lUpFront.stop()
-        rBottBack.stop()
-        lBottBack.stop()
+        XJoystickDrive(0, 0, 0)  # stop the robot
         drive_state.initialized = False   # ready for next command
         return True
 
@@ -293,7 +279,69 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
 def autonomous():
     brain.screen.clear_screen()
     brain.screen.print("autonomous code")
-    # place autonomous code here
+
+    # Read starting position from GPS
+    startX = gps.x_position()
+    startY = gps.y_position()
+
+    # Track absolute target position
+    posX = startX
+    posY = startY
+    heading = 0
+
+    # 1. Drive 36 inches to the right
+    posX += 36
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 2. Rotate 180 degrees
+    heading = 180
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 3. Drop matchloader
+    matchLoad.open()
+
+    # 4. Turn on intake
+    intakeMG.spin(FORWARD)
+
+    # 5. Drive down 12 inches
+    posY -= 12
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 6. Wait 1 second
+    wait(1000, MSEC)
+
+    # 7. Drive up 12 inches
+    posY += 12
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 8. Lift heightMech
+    heightMech.open()
+
+    # 9. Lift matchloader
+    matchLoad.close()
+
+    # 10. Spin 180 degrees (back to 0)
+    heading = 0
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 11. Left 4 inches
+    posX -= 4
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 12. Drive up 12 inches
+    posY += 12
+    while not driveToPoint(posX, posY, heading, drive_state):
+        wait(20, MSEC)
+
+    # 13. Run both intake forward and outtake flex forward
+    intakeMG.spin(FORWARD)
+    outFlex.spin(FORWARD)
 
 
 # ===== driver_control =====
@@ -328,43 +376,37 @@ def user_control():
             # D-pad heading snap takes priority
             currentHeading = imu.heading()
             headingError = normalize_angle_deg(dpadHeading - currentHeading)
-            turn = driver_heading_pid.calculate_angle_error(headingError, brain.timer.time())
+            turn = chassis_heading_pid.calculate_angle_error(headingError, brain.timer.time())
         elif rightMag > DEADZONE:
             targetHeading = joystick_to_heading(rightX, rightY)
             currentHeading = imu.heading()
             headingError = normalize_angle_deg(targetHeading - currentHeading)
-            turn = driver_heading_pid.calculate_angle_error(headingError, brain.timer.time())
+            turn = chassis_heading_pid.calculate_angle_error(headingError, brain.timer.time())
         else:
             turn = 0
-            driver_heading_pid.reset()
+            chassis_heading_pid.reset()
 
         xPos = controller.axis4.position()
         yPos = controller.axis3.position()
 
         # --- Intake (bumpers) ---
-        if controller.buttonR2.pressing() and controller.buttonR1.pressing():
-            # R1+R2 combo: toggle match load
-            if not matchLoadOpen:
-                matchLoad.open()
-                matchLoadOpen = True
-            else:
-                matchLoad.close()
-                matchLoadOpen = False
-            # debounce – wait for release
-            while controller.buttonR2.pressing() and controller.buttonR1.pressing():
-                wait(10, MSEC)
-        elif controller.buttonR2.pressing():
+        
+        if controller.buttonR1.pressing():
             intakeMG.spin(FORWARD)
-        elif controller.buttonR1.pressing():
-            intakeMG.spin(REVERSE)
-        else:
-            intakeMG.stop()
+        
+        if controller.buttonR2.pressing():
+            outFlex.spin(FORWARD, 100, PERCENT)
+        
 
+        if controller.buttonL1.pressing():
+            intakeMG.spin(REVERSE)
+        
         if controller.buttonL2.pressing():
-            outFlex.spin(FORWARD)
-        elif controller.buttonL1.pressing():
-            outFlex.spin(REVERSE)
-        else:
+            outFlex.spin(REVERSE, 100, PERCENT)
+        
+        if not controller.buttonR1.pressing() and not controller.buttonL1.pressing():
+            intakeMG.stop()
+        if not controller.buttonR2.pressing() and not controller.buttonL2.pressing():
             outFlex.stop()
 
         # --- Face buttons ---
@@ -389,7 +431,7 @@ def user_control():
         # A = reset IMU heading
         if controller.buttonA.pressing():
             imu.set_heading(0)
-            driver_heading_pid.reset()
+            chassis_heading_pid.reset()
             # debounce – wait for release
             while controller.buttonA.pressing():
                 wait(10, MSEC)

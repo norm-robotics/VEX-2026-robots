@@ -1,15 +1,16 @@
 from config import * # lsp-only
 from utils import * # lsp-only
 from init import * # lsp-only
+from sensor_fusion import * # lsp-only
 
 def XJoystickDrive(Xpos, Ypos, turn):
     if(abs(Xpos) > DEADZONE or abs(Ypos) > DEADZONE or abs(turn) > DEADZONE):
         if FIELD_ORIENTED:
             Xpos, Ypos, turn = fieldOrientedControl(Xpos, Ypos, turn)
-        frontRightSpeed = Ypos - Xpos - turn
-        rearRightSpeed = Ypos + Xpos - turn
-        frontLeftSpeed = Ypos + Xpos + turn
-        rearLeftSpeed = Ypos - Xpos + turn
+        frontRightSpeed = clamp(Ypos - Xpos - turn, -50, 50)
+        rearRightSpeed = clamp(Ypos + Xpos - turn, -50, 50)
+        frontLeftSpeed = clamp(Ypos + Xpos + turn, -50, 50)
+        rearLeftSpeed = clamp(Ypos - Xpos + turn, -50, 50)
 
         rearLeftMG.spin(FORWARD, rearLeftSpeed, PERCENT)
         rearRightMG.spin(FORWARD, rearRightSpeed, PERCENT)
@@ -22,7 +23,7 @@ def XJoystickDrive(Xpos, Ypos, turn):
         rearRightMG.stop()
 
 def fieldOrientedControl(Xpos, Ypos, turn):
-    heading = imu.heading()
+    heading = fusion.get_heading()
     headingRad = heading * (3.14159 / 180)
     rotatedX = Xpos * math.cos(headingRad) - Ypos * math.sin(headingRad)
     rotatedY = Xpos * math.sin(headingRad) + Ypos * math.cos(headingRad)
@@ -38,10 +39,10 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
     if not drive_state.initialized:
         drive_state.reset()
 
-    # Read sensors once per tick
-    currentX = gps.x_position()
-    currentY = gps.y_position()
-    currentHeading = gps.heading()
+    # Update sensor fusion and read fused state
+    fusion.update()
+    currentX, currentY = fusion.get_position()
+    currentHeading = fusion.get_heading()
 
     # PID for each chassis axis (field frame)
     timestamp = brain.timer.time()
@@ -50,19 +51,9 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
     heading_error = normalize_angle_deg(targetHeading - currentHeading)
     ang_z = chassis_heading_pid.calculate_error(heading_error, timestamp)
 
-    # Field → robot frame
-    robot_x, robot_y = fieldToRobot(lin_x, lin_y, currentHeading)
-
-    # X-drive mixing: Fwd = robot_y, Stf = robot_x, Turn = ang_z (CW positive)
-    front_right =  robot_y - robot_x - ang_z   # Fwd - Stf - Turn
-    front_left  =  robot_y + robot_x + ang_z   # Fwd + Stf + Turn
-    rear_right  =  robot_y + robot_x - ang_z   # Fwd + Stf - Turn
-    rear_left   =  robot_y - robot_x + ang_z   # Fwd - Stf + Turn
-
-    frontRightMG.spin(FORWARD, clamp(front_right, -100, 100), VelocityUnits.PERCENT)
-    frontLeftMG.spin(FORWARD, clamp(front_left, -100, 100), VelocityUnits.PERCENT)
-    rearRightMG.spin(FORWARD, clamp(rear_right, -100, 100), VelocityUnits.PERCENT)
-    rearLeftMG.spin(FORWARD, clamp(rear_left, -100, 100), VelocityUnits.PERCENT)
+    # Pass field-frame PID outputs to XJoystickDrive.
+    # fieldOrientedControl inside XJoystickDrive handles field→robot conversion.
+    XJoystickDrive(lin_x, lin_y, ang_z)
 
     # Settle check
     dist_error = math.sqrt((targetX - currentX) ** 2 + (targetY - currentY) ** 2)
@@ -75,10 +66,7 @@ def driveToPoint(targetX, targetY, targetHeading, drive_state):
     timed_out = (timestamp - drive_state.start_time) > TIMEOUT_MS
 
     if arrived or timed_out:
-        rUpFront.stop()
-        lUpFront.stop()
-        rBottBack.stop()
-        lBottBack.stop()
+        XJoystickDrive(0, 0, 0)  # stop the robot
         drive_state.initialized = False   # ready for next command
         return True
 

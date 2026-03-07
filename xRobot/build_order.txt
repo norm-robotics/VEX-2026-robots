@@ -4,6 +4,7 @@ config.py
 utils.py
 pid.py
 init.py
+sensor_fusion.py
 inverse_kinematics.py
 autonomous.py
 driver_control.py

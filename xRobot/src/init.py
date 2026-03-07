@@ -20,6 +20,14 @@ drive_state = DriveState()
 team_color = "red"
 chassis_x_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
 chassis_y_pid = PIDController(kp=1.0, ki=0.05, kd=0.15, max_output=100)
-chassis_heading_pid = PIDController(kp=0.2, ki=0.0, kd=0.2, max_output=100)
-driver_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.2, max_output=50)
+chassis_heading_pid = PIDController(kp=1.0, ki=0.0, kd=0.2, max_output=50)
+imu.calibrate()
+while imu.is_calibrating():
+    brain.screen.print("Calibrating IMU...")
+    wait(100, MSEC)
+
+gps.calibrate()
+while gps.is_calibrating():
+    brain.screen.print("Calibrating GPS...")
+    wait(100, MSEC)
 
