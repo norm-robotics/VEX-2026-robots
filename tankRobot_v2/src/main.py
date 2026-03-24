@@ -52,7 +52,7 @@ intakeMG = MotorGroup(intake, outFlap)
 #Calling required constructors
 drivetrain = SmartDrive(leftMG, rightMG, imu)
 
-maxAccn = 10.0 # in/s^2, experimentally determined max acceleration for the drive
+maxAccn = 18.0 # in/s^2, experimentally determined max acceleration for the drive
 maxVelocity = 340/60*(3.25)*math.pi # in/s, theoretical max velocity of the drive (motor free speed * wheel circumference)
 
 #======================================
@@ -168,36 +168,55 @@ def autonomous():
     
     imu.calibrate()
     while(imu.is_calibrating()):
+        brain.screen.print("IMU is Calibrating...")
+        brain.screen.next_row
         wait(25, MSEC)
+    brain.screen.clear_screen()
+    brain.screen.print("Autonomous Driving :(")
+
+    # #Moving to the middle of the field
+    # theta = getDegree(93.78, 78.19, 70.72, 16.88)
+    # dist1 = getDist(93.78, 78.19, 70.72, 16.88)
+
+    # intakeMG.spin(FORWARD, 100, PERCENT)
+    # wait(25, MSEC)
+    # drivetrain.drive_for(FORWARD, 41, INCHES, wait=True)
+    # wait(30, MSEC)
+    # drivetrain.turn_to_heading(-77, DEGREES, )
+    # wait(25, MSEC)
+
+    # #Making in blocks towards the long goal
+    # dist2 = getDist(109.92, 93.78, 70.22, 70.22)
+
+    # drivetrain.drive_for(FORWARD, dist2, INCHES)
+    # wait(35, MSEC)
+    # intakeMG.stop()
+    # wait(50, MSEC)
+
+    # #Reversing to central long goal position
+    # dist3 = getDist(62.23 - 7.5, 70.22, 70.22, 106.69)
+
+    # drivetrain.turn_to_heading
+    # outFlex.spin(FORWARD, 100, PERCENT)
+    # wait(5000, MSEC)
+    # outFlex.stop()
+    # wait(50, MSEC)
+    # heightMech.close()
+
     
-    #Moving to the middle of the field
-    theta = getDegree(93.78, 78.19, 70.72, 16.88)
-    dist1 = getDist(93.78, 78.19, 70.72, 16.88)
+    ##THE CODE BELOW IS ONLY UNTIL THE CODE ABOVE WORKS
 
-    drivetrain.turn_to_heading(theta, DEGREES, wait=True)
-    wait(30, MSEC)
-    drivetrain.drive_for(FORWARD, dist1 - 15, INCHES, wait=False)
-    wait(30, MSEC)
-    intakeMG.spin(FORWARD, 100, PERCENT)
+    drivetrain.drive_for(FORWARD, 30, INCHES, wait=True)
     wait(25, MSEC)
-    drivetrain.turn_to_heading((math.pi / 2) - theta, DEGREES, )
+    drivetrain.turn_to_heading(47, DEGREES, wait=True)
+    drivetrain.drive_for(FORWARD, 2, INCHES, wait=True)
     wait(25, MSEC)
-
-    #Making in blocks towards the long goal
-    dist2 = getDist(109.92, 93.78, 70.22, 70.22)
-
-    drivetrain.drive_for(FORWARD, dist2, INCHES)
-    wait(35, MSEC)
-    intakeMG.stop()
-    wait(50, MSEC)
-
-    #Reversing to central long goal position
-    dist3 = getDist(62.23 - 7.5, 70.22, 70.22, 106.69)
+    outFlap.spin(FORWARD, 100, PERCENT)
     outFlex.spin(FORWARD, 100, PERCENT)
-    wait(5000, MSEC)
-    outFlex.stop()
-    wait(50, MSEC)
-    heightMech.close()
+    wait(2000, MSEC)
+    wait(25, MSEC)
+    drivetrain.stop()
+
 
 #======================================
 #Driver Skills Code
@@ -212,6 +231,7 @@ def user_control():
 
     while True:
         timestamp = brain.timer.time()
+
     #-----------------------------------------------
         #Defining buttons on the controller
     #-----------------------------------------------
@@ -240,20 +260,32 @@ def user_control():
         currTime = brain.timer.time()
         dt = currTime -timestamp
         
-        turn = joystickCurve(controller.axis1.position(), 3.0)
-        drive = joystickCurve(controller.axis3.position(), 3.0)
-        driveVel = clamp(drive, lastForwardVelocity - deltaVMax(dt), lastForwardVelocity + deltaVMax(dt))
+        # turn = joystickCurve(controller.axis1.position(), 2.5)
+        # drive = joystickCurve(controller.axis3.position(), 2.5)
 
-        leftSpeed = clamp(driveVel + turn, -70, 70)
-        rightSpeed = clamp(driveVel - turn, -70, 70)
+        turn = controller.axis1.position()
+        drive = controller.axis3. position()
+        driveVel = clamp(drive, lastForwardVelocity - deltaVMax(dt), lastForwardVelocity + deltaVMax(dt))
+        
+        leftSpeed = clamp(driveVel + turn, -100, 100)
+        rightSpeed = clamp(driveVel - turn, -100, 100)
+        
+        if controller.buttonA.pressing():
+            leftSpeed, rightSpeed = 70, 70
+        elif controller.buttonB.pressing():
+            leftSpeed = clamp(driveVel + turn, -100, 100)
+            rightSpeed = clamp(driveVel - turn, -100, 100)
 
         lastForwardVelocity = driveVel
             
-        if (abs(leftSpeed) < 2) or (abs(rightSpeed) < 2):
-            drivetrain.stop()
-        else:
-            leftMG.spin(FORWARD, leftSpeed, PERCENT)
-            rightMG.spin(FORWARD, rightSpeed, PERCENT)
+        # if (abs(leftSpeed) < 2) or (abs(rightSpeed) < 2):
+        #     drivetrain.stop()
+        # else:
+        #     leftMG.spin(FORWARD, leftSpeed, PERCENT)
+        #     rightMG.spin(FORWARD, rightSpeed, PERCENT)
+
+        leftMG.spin(FORWARD, leftSpeed, PERCENT)
+        rightMG.spin(FORWARD, rightSpeed, PERCENT)
         
         wait(20, MSEC)
 
