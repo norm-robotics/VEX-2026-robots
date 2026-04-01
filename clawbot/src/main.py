@@ -32,6 +32,8 @@ armMotor2 = Motor(Ports.PORT6, GearSetting.RATIO_36_1, False)
 
 armMotorGroup = MotorGroup(armMotor1, armMotor2)
 
+flag = Pneumatics(brain.three_wire_port.h)
+
 
 # Max motor speed (percent) for motors controlled by buttons
 MAX_SPEED = 40
@@ -83,6 +85,13 @@ def drive_task():
         armMotorGroup.spin(FORWARD, control_l1, PERCENT)
         clawMotor.spin(FORWARD, control_r1, PERCENT)
         # No need to run too fast
+
+        if (controller.buttonX.pressing):
+            flag.open()
+        elif (controller.buttonB.pressing):
+            flag.close()
+
+
         sleep(10)
 
 # Run the drive code
